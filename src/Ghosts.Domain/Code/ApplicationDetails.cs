@@ -6,6 +6,8 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using NLog;
+using NLog.Targets;
+using NPOI.SS.Formula.Functions;
 
 namespace Ghosts.Domain.Code
 {
@@ -58,7 +60,7 @@ namespace Ghosts.Domain.Code
                 }
                 catch
                 {
-                    return Assembly.GetEntryAssembly()?.Location;
+                    return Clean(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location));
                 }
             }
         }
