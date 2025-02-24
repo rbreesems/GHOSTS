@@ -234,6 +234,28 @@ namespace ghosts.client.linux.handlers
                         }
                     }
 
+                    if (handler.HandlerArgs.ContainsKey("blog-credentials"))
+                    {
+
+                        try
+                        {
+                            _credentials = JsonConvert.DeserializeObject<Credentials>(handler.HandlerArgs["blog-credentials"].ToString());
+                        }
+                        catch (System.Exception e)
+                        {
+                            Log.Trace($"Blog:: Error parsing blog credentials , blog browser action will not be executed.");
+                            baseHandler.BlogAbort = true;
+                            Log.Error(e);
+                            return;
+                        }
+                    }
+
+                    if (_credentials == null) {
+                        Log.Trace($"Blog:: No credentials specified in handler-args, blog browser action will not be executed.");
+                        baseHandler.BlogAbort = true;
+                        return;
+                    }
+
                     //now parse the command args
                     //parse the command args
 

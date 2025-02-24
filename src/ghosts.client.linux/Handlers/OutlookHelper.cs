@@ -86,6 +86,7 @@ namespace ghosts.client.linux.handlers
         public int saveAttachmentProbability = 0;
 
         private Credentials _credentials = null;
+        private List<string> _domainEmailList = null;
         private string _state = "initial";
         public int errorCount = 0;
         public int errorThreshold = 10;  //after this many errors, restart the browser
@@ -1583,6 +1584,22 @@ namespace ghosts.client.linux.handlers
                             }
                         }
 
+                        if (handler.HandlerArgs.ContainsKey("outlook-email-domain-addresses"))
+                        {
+
+                            try
+                            {
+                                _domainEmailList = JsonConvert.DeserializeObject<List<string>>(handler.HandlerArgs["outlook-email-domain-addresses"].ToString());
+                            }
+                            catch (System.Exception e)
+                            {
+                                Log.Trace($"WebOutlook:: Error parsing outlook credentials, outlook browser action will not be executed.");
+                                baseHandler.OutlookAbort = true;
+                                Log.Error(e);
+                                return;
+                            }
+                        }
+
                         credFname = handler.HandlerArgs["outlook-credentials-file"].ToString();
 
                         if (handler.HandlerArgs.ContainsKey("outlook-credentials-file"))
@@ -1600,6 +1617,28 @@ namespace ghosts.client.linux.handlers
                                 return;
                             }
                         }
+
+                        if (handler.HandlerArgs.ContainsKey("outlook-credentials"))
+                        {
+
+                            try
+                            {
+                                _credentials = JsonConvert.DeserializeObject<Credentials>(handler.HandlerArgs["outlook-credentials"].ToString());
+                            }
+                            catch (System.Exception e)
+                            {
+                                Log.Trace($"WebOutlook:: Error parsing outlook credentials, outlook browser action will not be executed.");
+                                baseHandler.OutlookAbort = true;
+                                Log.Error(e);
+                                return;
+                            }
+                        }
+
+                        if (_credentials == null) {
+                        Log.Trace($"WebOutlook:: No credentials specified in handler-args, outlook browser action will not be executed.");
+                        baseHandler.OutlookAbort = true;
+                        return;
+                    }
 
                         //now parse the command args
                         //parse the command args
@@ -1715,7 +1754,7 @@ namespace ghosts.client.linux.handlers
                         Log.Trace($"WebOutlook:: Starting action: {action}.");
                         if (action == "create")
                         {
-                            emailConfig = new EmailConfiguration(timelineEvent.CommandArgs);
+                            emailConfig = new EmailConfiguration(timelineEvent.CommandArgs, _domainEmailList);
                             success = DoCreate(handler, emailConfig);
                         }
 
