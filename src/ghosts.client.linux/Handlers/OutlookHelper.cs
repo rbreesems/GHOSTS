@@ -1601,6 +1601,28 @@ namespace ghosts.client.linux.handlers
                             }
                         }
 
+                        if (handler.HandlerArgs.ContainsKey("outlook-credentials"))
+                        {
+
+                            try
+                            {
+                                _credentials = JsonConvert.DeserializeObject<Credentials>(handler.HandlerArgs["outlook-credentials"].ToString());
+                            }
+                            catch (System.Exception e)
+                            {
+                                Log.Trace($"WebOutlook:: Error parsing outlook credentials, outlook browser action will not be executed.");
+                                baseHandler.OutlookAbort = true;
+                                Log.Error(e);
+                                return;
+                            }
+                        }
+
+                        if (_credentials == null) {
+                        Log.Trace($"WebOutlook:: No credentials specified in handler-args, outlook browser action will not be executed.");
+                        baseHandler.OutlookAbort = true;
+                        return;
+                    }
+
                         //now parse the command args
                         //parse the command args
 
