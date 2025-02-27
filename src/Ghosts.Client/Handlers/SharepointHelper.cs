@@ -592,6 +592,29 @@ namespace Ghosts.Client.Handlers
                         }
                     }
 
+                    if (handler.HandlerArgs.ContainsKey("sharepoint-credentials"))
+                    {
+
+                        try
+                        {
+                            _credentials = JsonConvert.DeserializeObject<Credentials>(handler.HandlerArgs["sharepoint-credentials"].ToString());
+                        }
+                        catch (System.Exception e)
+                        {
+                            Log.Trace($"Sharepoint:: Error parsing sharepoint credentials , sharepoint browser action will not be executed.");
+                            baseHandler.SharePointAbort = true;
+                            Log.Error(e);
+                            return;
+                        }
+                    }
+
+                    if (_credentials == null)
+                    {
+                        Log.Trace($"Sharepoint:: No credentials specified in handler-args, sharepoint browser action will not be executed.");
+                        baseHandler.SharePointAbort = true;
+                        return;
+                    }
+
                     //now parse the command args
                     //parse the command args
 
