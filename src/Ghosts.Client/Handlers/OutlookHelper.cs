@@ -1426,7 +1426,7 @@ namespace Ghosts.Client.Handlers
         /// <param name="timelineEvent"></param>
         public void Execute(TimelineHandler handler, TimelineEvent timelineEvent)
         {
-            string credFname;
+            string credFname = null;
             string credentialKey = null;
             EmailConfiguration emailConfig;
 
@@ -1583,11 +1583,9 @@ namespace Ghosts.Client.Handlers
                             }
                         }
 
-                        credFname = handler.HandlerArgs["outlook-credentials-file"].ToString();
-
                         if (handler.HandlerArgs.ContainsKey("outlook-credentials-file"))
                         {
-
+                            credFname = handler.HandlerArgs["outlook-credentials-file"].ToString();
                             try
                             {
                                 _credentials = JsonConvert.DeserializeObject<Credentials>(System.IO.File.ReadAllText(credFname));
@@ -1676,7 +1674,7 @@ namespace Ghosts.Client.Handlers
 
                         if (username == null || password == null || domain == null)
                         {
-                            Log.Trace($"WebOutlook:: The credential key {credentialKey} does not return a valid credential from file {credFname}, username or password or domain is null,   outlook browser action will not be executed");
+                            Log.Trace($"WebOutlook:: The credential key {credentialKey} does not return a valid credential, username or password or domain is null,   outlook browser action will not be executed");
                             baseHandler.OutlookAbort = true;
                             return;
                         }
