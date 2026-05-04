@@ -120,6 +120,7 @@ namespace Ghosts.Domain
         PowerShell = 39,
         Bash = 40,
         Print = 45,
+        BrowserEdge = 46,
         Ssh = 100,
         Sftp = 101,
         Pidgin = 102,
