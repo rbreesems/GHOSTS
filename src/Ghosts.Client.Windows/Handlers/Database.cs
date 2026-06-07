@@ -2,20 +2,18 @@
 
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using Ghosts.Domain;
 using Ghosts.Domain.Code;
 using Newtonsoft.Json;
 using MySqlConnector;
 using System.Collections.Generic;
 using System.Text;
-using Ghosts.Client.Universal.Infrastructure;
-using System.Runtime.CompilerServices;
+using Ghosts.Client.Infrastructure;
 
-namespace Ghosts.Client.Universal.Handlers;
 
-public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, CancellationToken cancellationToken)
-    : BaseHandler(entireTimeline, timelineHandler, cancellationToken)
+namespace Ghosts.Client.Handlers;
+
+public class Database : BaseHandler
 {
     private DatabaseTargets _currentDbTargets;
     private int _jitterFactor;
@@ -31,15 +29,16 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
     private DatabaseContentManager contentManager;
     
 
-    protected override Task RunOnce()
+    public Database(TimelineHandler handler)
     {
         try
         {
+            base.Init(handler);
             contentManager = new DatabaseContentManager();
-            if (Handler.HandlerArgs != null)
+            if (handler.HandlerArgs != null)
             {
                 
-                if (Handler.HandlerArgs.TryGetValue("DatabaseTargets", out var databasetargetsArg))
+                if (handler.HandlerArgs.TryGetValue("DatabaseTargets", out var databasetargetsArg))
                 {
                     try
                     {
@@ -47,10 +46,10 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
                     }
                     catch (Exception e)
                     {
-                        _log.Error(e);
+                        Log.Error(e);
                     }
                 }
-                if (Handler.HandlerArgs.TryGetValue("query-limit", out var limitArg))
+                if (handler.HandlerArgs.TryGetValue("query-limit", out var limitArg))
                 {
                     try
                     {
@@ -59,11 +58,11 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
                     }
                     catch (Exception e)
                     {
-                        _log.Error(e);
+                        Log.Error(e);
                     }
                 }
 
-                if (Handler.HandlerArgs.TryGetValue("max-rows", out var maxRowsArg))
+                if (handler.HandlerArgs.TryGetValue("max-rows", out var maxRowsArg))
                 {
                     try
                     {
@@ -72,11 +71,11 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
                     }
                     catch (Exception e)
                     {
-                        _log.Error(e);
+                        Log.Error(e);
                     }
                 }
 
-                if (Handler.HandlerArgs.TryGetValue("port", out var portArg))
+                if (handler.HandlerArgs.TryGetValue("port", out var portArg))
                 {
                     try
                     {
@@ -85,11 +84,11 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
                     }
                     catch (Exception e)
                     {
-                        _log.Error(e);
+                        Log.Error(e);
                     }
                 }
 
-                if (Handler.HandlerArgs.TryGetValue("insert-probability", out var insertArg))
+                if (handler.HandlerArgs.TryGetValue("insert-probability", out var insertArg))
                 {
                     try
                     {
@@ -98,11 +97,11 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
                     }
                     catch (Exception e)
                     {
-                        _log.Error(e);
+                        Log.Error(e);
                     }
                 }
 
-                if (Handler.HandlerArgs.TryGetValue("delete-probability", out var deleteArg))
+                if (handler.HandlerArgs.TryGetValue("delete-probability", out var deleteArg))
                 {
                     try
                     {
@@ -111,11 +110,11 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
                     }
                     catch (Exception e)
                     {
-                        _log.Error(e);
+                        Log.Error(e);
                     }
                 }
 
-                if (Handler.HandlerArgs.TryGetValue("query-probability", out var queryArg))
+                if (handler.HandlerArgs.TryGetValue("query-probability", out var queryArg))
                 {
                     try
                     {
@@ -124,12 +123,12 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
                     }
                     catch (Exception e)
                     {
-                        _log.Error(e);
+                        Log.Error(e);
                     }
                 }
 
                 
-                if (Handler.HandlerArgs.TryGetValue("delay-jitter", out var jitterArg))
+                if (handler.HandlerArgs.TryGetValue("delay-jitter", out var jitterArg))
                 {
                     _jitterFactor = Jitter.JitterFactorParse(jitterArg.ToString());
                 }
@@ -137,38 +136,44 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
 
             if (_currentDbTargets == null)
             {
-                _log.Error("Database:: No credentials supplied, either CredentialsFile or Credentials must be supplied in handler args, exiting.");
-                return Task.CompletedTask;
+                Log.Error("Database:: No credentials supplied, either CredentialsFile or Credentials must be supplied in handler args, exiting.");
+                return;
             }
 
-            Ex();
+            if (handler.Loop)
+            {
+                while (true)
+                {
+                    Ex(handler);
+                }
+            }
+            else
+            {
+                Ex(handler);
+            }
         }
-        catch (OperationCanceledException)
+        catch (ThreadAbortException)
         {
-            throw;
+            Log.Trace("Database closing...");
         }
         catch (Exception e)
         {
-            _log.Error(e);
+            Log.Error(e);
         }
 
-        return Task.CompletedTask;
     }
 
-    private void Ex()
+    private void Ex(TimelineHandler handler)
     {
-        foreach (var timelineEvent in Handler.TimeLineEvents)
+        foreach (var timelineEvent in handler.TimeLineEvents)
         {
-            Token.ThrowIfCancellationRequested();
-            WorkingHours.Is(Handler);
+            WorkingHours.Is(handler);
 
             if (timelineEvent.DelayBeforeActual > 0)
-            {
-                if (Token.WaitHandle.WaitOne(timelineEvent.DelayBeforeActual)) Token.ThrowIfCancellationRequested();
+                Thread.Sleep(timelineEvent.DelayBeforeActual);
 
-            }
-
-            _log.Trace($"Database Command: {timelineEvent.Command} with delay after of {timelineEvent.DelayAfterActual}");
+            
+            Log.Trace($"Database Command: {timelineEvent.Command} with delay after of {timelineEvent.DelayAfterActual}");
 
             switch (timelineEvent.Command)
             {
@@ -176,13 +181,13 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
                     var cmd = timelineEvent.CommandArgs[_random.Next(0, timelineEvent.CommandArgs.Count)];
                     if (!string.IsNullOrEmpty(cmd.ToString()))
                     {
-                        ExecuteDatabase(timelineEvent, cmd.ToString());
+                        ExecuteDatabase(handler, timelineEvent, cmd.ToString());
                     }
                     
                     break;
             }
             if (timelineEvent.DelayAfterActual > 0) {
-                if (Token.WaitHandle.WaitOne(Jitter.JitterFactorDelay(timelineEvent.DelayAfterActual, _jitterFactor))) Token.ThrowIfCancellationRequested();
+                Thread.Sleep(timelineEvent.DelayAfterActual);
             }
             
         }
@@ -199,7 +204,7 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
 
     */
 
-    private void ExecuteDatabase(TimelineEvent timelineEvent, string command)
+    private void ExecuteDatabase(TimelineHandler handler, TimelineEvent timelineEvent, string command)
     {
         var charSeparators = new char[] { '|' };
         var cmdArgs = command.Split(charSeparators, 3, StringSplitOptions.None);
@@ -209,31 +214,31 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
         var password = _currentDbTargets.GetPassword(dbKey);
         var databases = _currentDbTargets.GetDatabases(dbKey);
 
-        var dbCmd = "noaction";
+        string dbCmd = "noaction";
 
         if (username == null || password == null)
         {
-            _log.Error($"Database:: Missing username or password for database key '{dbKey}', skipping.");
+            Log.Error($"Database:: Missing username or password for database key '{dbKey}', skipping.");
             return;
         }
 
         if (databases == null || databases.Count == 0)
         {
-            _log.Error($"Database:: No database schema data for database key '{dbKey}', skipping.");
+            Log.Error($"Database:: No database schema data for database key '{dbKey}', skipping.");
             return;
         }
 
         var database = databases[_random.Next(0,databases.Count)];
         if (database.Tables == null || database.Tables.Count == 0)
         {
-            _log.Error($"Database:: No tables defined for database {database.Name} for database key '{dbKey}', skipping.");
+            Log.Error($"Database:: No tables defined for database {database.Name} for database key '{dbKey}', skipping.");
             return;
         }
         var table = database.Tables[_random.Next(0,database.Tables.Count )];
 
         var connstring = $"Server={hostIp};Port={_port};Database={database.Name};User ID={username};Password={password}";
 
-         _log.Trace($"Database:: Beginning Database operation to host: {hostIp} with command: {command}");
+         Log.Trace($"Database:: Beginning Database operation to host: {hostIp} with command: {command}");
 
     
         try
@@ -269,17 +274,17 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
                 dbCmd = action;
             }
         }
-        catch (OperationCanceledException)
+        catch (ThreadAbortException)
         {
             throw;
         }
         catch (Exception e)
         {
-            _log.Error(e);
+            Log.Error(e);
         }
         
 
-        Report(new ReportItem { Handler = Handler.HandlerType.ToString(), Command = hostIp, Arg = dbCmd, Trackable = timelineEvent.TrackableId });
+        Report(new ReportItem { Handler = handler.HandlerType.ToString(), Command = hostIp, Arg = dbCmd, Trackable = timelineEvent.TrackableId });
     }
 
     /// <summary>
@@ -368,11 +373,11 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
         using (MySqlConnection connection = new MySqlConnection(connstring))
         {
             connection.Open();
-            _log.Trace($"Database:: Successfully opened connection to host: {hostIp}.");
+            Log.Trace($"Database:: Successfully opened connection to host: {hostIp}.");
             using (MySqlCommand cmd = new MySqlCommand(query, connection))
             {
                 using (var reader = cmd.ExecuteReader()) {
-                    _log.Trace($"Database:: Reading query result");
+                    Log.Trace($"Database:: Reading query result");
                     while (reader.Read()) {
                         var rString = "";
                         foreach (Dictionary<string, string> column in table.Columns) {
@@ -381,10 +386,10 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
                             if (rString == "") rString = $"Database::>  {cName}: {value}";
                                 else rString += $"\t{cName}: {value}";
                         }
-                        _log.Trace($"{rString}");
+                        Log.Trace($"{rString}");
                     }
                 }
-                _log.Trace($"Database:: Successful database operation query to host: {hostIp}.");
+                Log.Trace($"Database:: Successful database operation query to host: {hostIp}.");
             }
         }
     }
@@ -435,12 +440,12 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
         using (MySqlConnection connection = new MySqlConnection(connstring))
         {
             connection.Open();
-            _log.Trace($"Database:: Successfully opened connection to host: {hostIp}.");
+            Log.Trace($"Database:: Successfully opened connection to host: {hostIp}.");
             using (MySqlCommand cmd = new MySqlCommand(query, connection))
             {
                 cmd.ExecuteScalar();
             }
-            _log.Trace($"Database:: Successful database operation {operation} to host: {hostIp}.");
+            Log.Trace($"Database:: Successful database operation {operation} to host: {hostIp}.");
         }
     }
 
@@ -451,12 +456,12 @@ public class Database(Timeline entireTimeline, TimelineHandler timelineHandler, 
         using (MySqlConnection connection = new MySqlConnection(connstring))
         {
             connection.Open();
-            _log.Trace($"Database:: Successfully opened connection to host: {hostIp}.");
+            Log.Trace($"Database:: Successfully opened connection to host: {hostIp}.");
             using (MySqlCommand cmd = new MySqlCommand(query, connection))
             {
                 rval = Convert.ToInt32(cmd.ExecuteScalar());
             }
-            _log.Trace($"Database:: Successful database operation {operation} to host: {hostIp}.");
+            Log.Trace($"Database:: Successful database operation {operation} to host: {hostIp}.");
         }
         return rval;
     }
