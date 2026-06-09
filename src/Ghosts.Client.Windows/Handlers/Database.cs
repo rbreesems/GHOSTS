@@ -79,7 +79,7 @@ public class Database : BaseHandler
                 {
                     try
                     {
-                        _port = int.Parse(maxRowsArg.ToString());
+                        _port = int.Parse(portArg.ToString());
                         if (_port < 0) _port = 3306;
                     }
                     catch (Exception e)
