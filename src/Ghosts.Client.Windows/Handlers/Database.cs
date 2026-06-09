@@ -5,7 +5,7 @@ using System.Threading;
 using Ghosts.Domain;
 using Ghosts.Domain.Code;
 using Newtonsoft.Json;
-using MySqlConnector;
+using MySql.Data.MySqlClient;
 using System.Collections.Generic;
 using System.Text;
 using Ghosts.Client.Infrastructure;
