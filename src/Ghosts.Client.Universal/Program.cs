@@ -143,7 +143,8 @@ internal static class Program
             _log.Trace("Handling disabled, continuing.");
         }
 
-        TempFiles.StartTempFileWatcher();
+        // Do not start automatic TempFile deletion
+        //TempFiles.StartTempFileWatcher();
 
         await Task.Delay(Timeout.Infinite, CancellationToken.None);
     }
