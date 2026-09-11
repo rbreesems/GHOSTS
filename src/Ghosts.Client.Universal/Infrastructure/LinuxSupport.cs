@@ -67,70 +67,6 @@ namespace Ghosts.Client.Universal.Infrastructure
             return Result;
         }
 
-        public void AttachFile()
-        {
-            try
-            {
-                needRestart = false;
-                //The dummy \b (backspaces) are needed at the beginning because a few characters at the start can be lost
-                string cmd =
-                    $"xdotool search -name '{windowTitle}' windowfocus --sync type --delay 100 '\b\b\b\b\b\b\b\b\b\b{filename}\r'";
-                ExecuteBashCommand(id, cmd);
-                Thread.Sleep(3000);
-                // Check if the window has closed, do multiple close attempts
-                int i = 0;
-                int closeMax = 5;
-                while (i < closeMax)
-                {
-                    cmd = $"xdotool search -name '{windowTitle}'";
-                    string result = ExecuteBashCommand(id, cmd);
-                    Thread.Sleep(1000);
-                    if (!string.IsNullOrEmpty(result))
-                    {
-                        // close the window
-                        cmd = $"xdotool search -name '{windowTitle}' windowfocus key alt+c";
-                        ExecuteBashCommand(id, cmd);
-                        Thread.Sleep(1000);
-                    }
-                    else
-                    {
-                        break;
-                    }
-
-                    i += 1;
-                }
-
-                if (i == closeMax)
-                {
-                    // try windowkill
-                    cmd = $"xdotool search -name '{windowTitle}'";
-                    string result = ExecuteBashCommand(id, cmd);
-                    if (!string.IsNullOrEmpty(result))
-                    {
-                        cmd = $"xdotool search -name '{windowTitle}' windowkill";
-                        ExecuteBashCommand(id, cmd);
-                        Thread.Sleep(1000);
-                        result = ExecuteBashCommand(id, cmd);
-                        ExecuteBashCommand(id, cmd);
-                        Thread.Sleep(1000);
-                        // reset i if window actually killed
-                        if (string.IsNullOrEmpty(result)) i = 0;
-                    }
-                }
-
-                if (i == closeMax)
-                {
-                    needRestart = true;
-                    Log.Error($"{id}:: Unable to attach file {filename}");
-                }
-
-                return;
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-            }
-        }
     }
 
 
@@ -145,46 +81,5 @@ namespace Ghosts.Client.Universal.Infrastructure
             Log = aLog;
         }
 
-        public bool AttachFileUsingThread(string id, string filename, string windowTitle, int timeoutSeconds,
-            int retries)
-        {
-            // Use a thread in case the xdotool execution hangs
-
-            runner ??= new BashExecute(Log);
-            runner.id = id;
-            runner.windowTitle = windowTitle;
-            runner.filename = filename;
-            var count = 0;
-            while (count < retries + 1)
-            {
-                Thread t = new Thread(new ThreadStart(runner.AttachFile));
-                t.Start();
-                var totalTime = 0;
-                while (totalTime < timeoutSeconds)
-                {
-                    Thread.Sleep(10000);
-                    if (!t.IsAlive) break;
-                    totalTime += 10;
-                }
-
-                if (t.IsAlive)
-                {
-                    t.Join();
-                    Thread.Sleep(5000);
-                    retries += 1;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            if (runner.GetNeedRestart())
-            {
-                return false;
-            }
-
-            return (count < retries + 1);
-        }
     }
 }

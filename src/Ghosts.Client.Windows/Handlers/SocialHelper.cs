@@ -149,14 +149,11 @@ namespace Ghosts.Client.Handlers
                         {
                             imageFile = imageFilesPng[(_random.Next(0, imageFilesPng.Length))];
                         }
-                        // click the browse button
+                        // Send image file to the file input element
                         targetElement =  Driver.FindElement(By.XPath("//label[text()='Share what you are thinking here...']//following-sibling::input[@type='file']"));
                         if (targetElement != null)
                         {
-                            BrowserHelperSupport.ElementClick(Driver, targetElement);
-                            Thread.Sleep(500);
-                            //filechoice window is open
-                            AttachFile(imageFile );
+                            targetElement.SendKeys(imageFile);
                             Thread.Sleep(500);
                         }
                     }
@@ -339,49 +336,6 @@ namespace Ghosts.Client.Handlers
             }
             return true;
         }
-
-
-        public void AttachFileWindows(string filename)
-        {
-            IntPtr winHandle = Winuser.FindWindow(null, AttachmentWindowTitle);
-            if (winHandle == IntPtr.Zero)
-            {
-                Log.Trace($"WebOutlook:: Unable to find '{AttachmentWindowTitle}' window to upload file attachment.");
-                return;
-            }
-            Winuser.SetForegroundWindow(winHandle);
-            Thread.Sleep(400);
-            string s;
-            // The spaces are needed because SendWait tends to drop the first character or so
-            if (Driver is OpenQA.Selenium.Firefox.FirefoxDriver)
-            {
-                s = "     " + filename + "{TAB}{TAB}{ENTER}";
-            }
-            else
-            {
-                s = "     " + filename + "{ENTER}";
-            }
-
-            System.Windows.Forms.SendKeys.SendWait(s);
-            Thread.Sleep(200);
-            winHandle = Winuser.FindWindow(null, AttachmentWindowTitle);
-            if (winHandle == IntPtr.Zero)
-            {
-                return;
-            }
-            // the window is still open. Grr. try closing it.
-            Winuser.SetForegroundWindow(winHandle);
-            System.Windows.Forms.SendKeys.SendWait("%{F4}");
-
-        }
-
-
-        public void AttachFile(string filename)
-        {
-            AttachFileWindows(filename);
-        }
-
-
 
         public string GetUploadFile()
         {
