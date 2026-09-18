@@ -55,9 +55,29 @@ namespace Ghosts.Client.Handlers
                 var targetElement =  Driver.FindElement(By.XPath("//img[@title='SOCIALIZER']"));
                 foundSocializer = true;
             }
-            catch (ThreadAbortException)
+            catch (ThreadAbortException ex)
             {
                 throw;  //pass up
+            }
+            catch (Exception ex)
+            {
+                //ignore
+            }
+            if (!foundSocializer)
+            {
+                try {
+                // Try looking for PandoraV9 default site
+                var targetElement = Driver.FindElement(By.XPath("//img[@title='PANDORA']"));
+                foundSocializer = true;
+                }
+                catch (ThreadAbortException ex)
+                {
+                    throw;  //pass up
+                }
+                catch (Exception ex)
+                {
+                    //ignore
+                }
             }
             return foundSocializer;
         }
@@ -153,10 +173,7 @@ namespace Ghosts.Client.Handlers
                         targetElement =  Driver.FindElement(By.XPath("//label[text()='Share what you are thinking here...']//following-sibling::input[@type='file']"));
                         if (targetElement != null)
                         {
-                            BrowserHelperSupport.ElementClick(Driver, targetElement);
-                            Thread.Sleep(500);
-                            //filechoice window is open
-                            AttachFile(imageFile );
+                            targetElement.SendKeys(imageFile);
                             Thread.Sleep(500);
                         }
                     }

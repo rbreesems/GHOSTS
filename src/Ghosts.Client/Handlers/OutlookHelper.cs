@@ -630,10 +630,8 @@ namespace Ghosts.Client.Handlers
                                     insertElement = Driver.FindElement(By.XPath(InsertAttachmentXpath));
                                     if (insertElement != null)
                                     {
-                                        BrowserHelperSupport.ElementClick(Driver, insertElement);
+                                        insertElement.SendKeys(FileToAttach);
                                         Thread.Sleep(500);
-                                        //filechoice window is open
-                                        AttachFile(FileToAttach);
                                     }
                                 }
                             }
@@ -642,10 +640,8 @@ namespace Ghosts.Client.Handlers
                                 var insertAttachmentElement = Driver.FindElement(By.XPath(InsertAttachmentXpath));
                                 if (insertAttachmentElement != null)
                                 {
-                                    BrowserHelperSupport.ElementClick(Driver, insertAttachmentElement);
+                                    insertAttachmentElement.SendKeys(FileToAttach);
                                     Thread.Sleep(500);
-                                    //filechoice window is open
-                                    AttachFile(FileToAttach);
                                 }
                             }
                         }
