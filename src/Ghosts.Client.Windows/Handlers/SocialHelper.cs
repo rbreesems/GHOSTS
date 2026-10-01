@@ -97,6 +97,9 @@ namespace Ghosts.Client.Handlers
                 theme = siteToTheme[site];  
                 return true;
             }
+
+            // try to find an element on the page
+            theme = null;
             
             // Try looking for PandoraV9 theme other than default
             string themeValue = null;
@@ -1036,6 +1039,7 @@ namespace Ghosts.Client.Handlers
 
 
                         this.baseHandler.Report(new ReportItem {Handler = $"Social{version}: {handler.HandlerType.ToString()}", Command = socialAction, Arg = "", Trackable = timelineEvent.TrackableId});
+                        //throw new Exception($"Social:: Simulated error to test restart logic, site {site}, action {socialAction}.");
                         break;
 
 
@@ -1048,7 +1052,9 @@ namespace Ghosts.Client.Handlers
                 {
                     throw;
                 }
-                errorCount = errorThreshold + 1;  // an exception at  this level needs a restart
+                // DO NOT restart Socializer. The restart logic is not correct.
+                //errorCount = errorThreshold + 1;  // an exception at  this level needs a restart
+                errorCount = 0;  // reset error count so that we don't restart on next iteration
                 LastException = e;  //save last exception so that it can be thrown up during restart
                 Log.Trace($"WebSocial:: Error at top level of execute loop.");
                 if (theme != null) Log.Trace($"Social:: Theme is {theme}, site is {site}.");

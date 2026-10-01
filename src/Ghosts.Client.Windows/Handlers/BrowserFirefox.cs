@@ -122,9 +122,10 @@ namespace Ghosts.Client.Handlers
 
         public bool FirefoxEx(TimelineHandler handler)
         {
-            try
+            
+            using (Driver = GetDriver(handler))
             {
-                using (Driver = GetDriver(handler))
+                try
                 {
                     base.Driver = Driver;
 
@@ -171,65 +172,66 @@ namespace Ghosts.Client.Handlers
                         //ignore
                     }
 
-                    if (handler.Loop)
+                    try 
                     {
-                        while (true)
+                        if (handler.Loop)
                         {
-                            if (Driver.CurrentWindowHandle == null)
+                            while (true)
                             {
-                                throw new Exception("Firefox window handle not available");
-                            }
+                                if (Driver.CurrentWindowHandle == null)
+                                {
+                                    throw new Exception("Firefox window handle not available");
+                                }
 
-                            ExecuteEvents(handler);
-                            if (this.Restart)
-                            {
-                                break;
+                                ExecuteEvents(handler);
+                                if (this.Restart)
+                                {
+                                    break;
+                                }
                             }
                         }
+                        else
+                        {
+                            ExecuteEvents(handler);
+                        }
                     }
-                    else
+                    catch (Exception e)
                     {
-                        ExecuteEvents(handler);
+                        Log.Debug(e);
+                        return false;
+                    }
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    if (e is ThreadAbortException || e is ThreadInterruptedException)
+                    {
+                        throw e;
+                    }
+                    Log.Debug(e);
+                    return false;
+                }
+                finally
+                {
+                    try
+                    {
+                        Driver.Quit();
+                    }
+                    catch { }
+
+                    try
+                    {
+                        ProcessManager.KillProcessAndChildrenByName(ProcessManager.ProcessNames.GeckoDriver);
+                        ProcessManager.KillProcessAndChildrenByName(ProcessManager.ProcessNames.Firefox);
+                    }
+                    catch { }
+
+                    if (this.Restart)
+                    {
+                        DoRestart(handler);
                     }
                 }
             }
-            catch (ThreadAbortException)
-            {
-                //ignore
-            }
-            catch (Exception e)
-            {
-                Log.Debug(e);
-                return false;
-            }
-            finally
-            {
-                try
-                {
-                    Driver.Quit();
-                }
-                catch { }
-
-                try
-                {
-                    Driver.Dispose();
-                }
-                catch { }
-
-                try
-                {
-                    ProcessManager.KillProcessAndChildrenByName(ProcessManager.ProcessNames.GeckoDriver);
-                    ProcessManager.KillProcessAndChildrenByName(ProcessManager.ProcessNames.Firefox);
-                }
-                catch { }
-
-                if (this.Restart)
-                {
-                    DoRestart(handler);
-                }
-            }
-
-            return true;
         }
 
         public virtual void DoRestart(TimelineHandler handler)
