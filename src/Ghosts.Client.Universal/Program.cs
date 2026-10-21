@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
+using System.Reflection;
 using Ghosts.Client.Universal.Comms;
 using Ghosts.Client.Universal.Comms.ClientSocket;
 using Ghosts.Client.Universal.Infrastructure;
@@ -17,7 +19,9 @@ using NLog;
 using Quartz;
 using Quartz.Impl;
 
+
 namespace Ghosts.Client.Universal;
+
 
 internal static class Program
 {
@@ -30,15 +34,51 @@ internal static class Program
     public static CheckId CheckId { get; set; }
     internal static BackgroundTaskQueue Queue;
 
+
+    private static Assembly ResolveAssembly(object sender, ResolveEventArgs args)
+    {
+        if (args.Name.StartsWith("office", StringComparison.OrdinalIgnoreCase))
+        {
+            // search for office.dll in the Global Assembly Cache.  Will be there if some version
+            // of Office (2013/2016/2019) was installed
+            // The typical file is C:\Windows\assembly\GAC_MSIL\office\15.0.0.0_71e9bce111e9429c\OFFICE.DLL
+            // but do not hardcode the path
+            string startPath = "C:\\Windows\\assembly\\GAC_MSIL\\office";
+            // Check if this is Office 32 bit or Office 64-bit
+            if (Directory.Exists(startPath))
+            {
+                // search this path
+                string searchPattern = "OFFICE.DLL";
+                try
+                {
+                    var files = Directory.EnumerateFiles(startPath, searchPattern, SearchOption.AllDirectories);
+                    foreach (string file in files)
+                    {
+                        // return first one, there should only be one
+                        return Assembly.LoadFrom(file);
+                    }   
+                }
+                catch (System.Exception e)
+                {
+                    //ignore
+                }
+    
+            }      
+        }
+        return null;
+    }
+
     private static async Task Main(string[] args)
     {
+        AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
+
         ClientConfigurationLoader.UpdateConfigurationWithEnvVars();
 
         try
         {
             await Run(args);
         }
-        catch (Exception e)
+        catch (System.Exception e)
         {
             Console.WriteLine($"Fatal exception in {ApplicationDetails.Name} {ApplicationDetails.Version}: {e}",
                 Color.Red);
@@ -66,7 +106,7 @@ internal static class Program
             Configuration = ClientConfigurationLoader.Config;
             ConfigurationUrls = new ApplicationDetails.ConfigurationUrls(Configuration.ApiRootUrl);
         }
-        catch (Exception e)
+        catch (System.Exception e)
         {
             var path = AppContext.BaseDirectory;
             var o =
@@ -111,7 +151,7 @@ internal static class Program
             {
                 await Survey.SurveyManager.Run();
             }
-            catch (Exception exc)
+            catch (System.Exception exc)
             {
                 _log.Error(exc);
             }
@@ -161,7 +201,7 @@ internal static class Program
                 if (job.CancellationTokenSource is { Token.CanBeCanceled: true })
                     job.CancellationTokenSource.Cancel();
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 _log.Debug($"Error cancelling task: {ex.Message}");
             }

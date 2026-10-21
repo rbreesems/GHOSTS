@@ -51,25 +51,25 @@ public class Word(Timeline entireTimeline, TimelineHandler timelineHandler, Canc
                     _log.Trace($"Word event - {timelineEvent}");
                     WorkingHours.Is(handler);
 
+
+                    var applicationType = Type.GetTypeFromProgID("Word.Application");
+                    dynamic officeApplication = Activator.CreateInstance(applicationType);
+                    officeApplication.Visible = true;
+                    dynamic document = null;
                     if (timelineEvent.DelayBeforeActual > 0)
                     {
                         if (jitterFactor > 0)
                         {
                             _log.Trace(
                                 $"DelayBefore, Sleeping with jitterfactor of {jitterFactor}% {timelineEvent.DelayBeforeActual}");
-                            Thread.Sleep(Jitter.JitterFactorDelay(timelineEvent.DelayBeforeActual, jitterFactor));
+                            if (Token.WaitHandle.WaitOne(Jitter.JitterFactorDelay(timelineEvent.DelayBeforeActual, jitterFactor))) Token.ThrowIfCancellationRequested();
                         }
                         else
                         {
                             _log.Trace($"DelayBefore, Sleeping {timelineEvent.DelayBeforeActual}");
-                            Thread.Sleep(timelineEvent.DelayBeforeActual);
+                            if (Token.WaitHandle.WaitOne(timelineEvent.DelayBeforeActual)) Token.ThrowIfCancellationRequested();
                         }
                     }
-
-                    var applicationType = Type.GetTypeFromProgID("Word.Application");
-                    dynamic officeApplication = Activator.CreateInstance(applicationType);
-                    officeApplication.Visible = true;
-                    dynamic document = null;
 
                     if (OfficeHelpers.ShouldOpenExisting(handler))
                     {
@@ -100,6 +100,10 @@ public class Word(Timeline entireTimeline, TimelineHandler timelineHandler, Canc
                     }
                     catch (Exception e)
                     {
+                        if (e is ThreadAbortException || e is ThreadInterruptedException || e is OperationCanceledException)
+                        {
+                            throw;
+                        }
                         _log.Trace($"Could not minimize: {e}");
                     }
 
@@ -111,7 +115,7 @@ public class Word(Timeline entireTimeline, TimelineHandler timelineHandler, Canc
                     }
 
                     _log.Trace($"Write sleep, Sleeping {writeSleep}");
-                    Thread.Sleep(writeSleep);
+                    if (Token.WaitHandle.WaitOne(writeSleep)) Token.ThrowIfCancellationRequested();
 
                     // insert some text
                     var list = RandomText.GetDictionary.GetDictionaryList();
@@ -160,6 +164,10 @@ public class Word(Timeline entireTimeline, TimelineHandler timelineHandler, Canc
                     }
                     catch (Exception e)
                     {
+                        if (e is ThreadAbortException || e is ThreadInterruptedException || e is OperationCanceledException)
+                        {
+                            throw;
+                        }
                         _log.Trace($"save-array exception: {e}");
                     }
 
@@ -190,6 +198,10 @@ public class Word(Timeline entireTimeline, TimelineHandler timelineHandler, Canc
                     }
                     catch (Exception e)
                     {
+                        if (e is ThreadAbortException || e is ThreadInterruptedException || e is OperationCanceledException)
+                        {
+                            throw;
+                        }
                         _log.Debug(e);
                     }
 
@@ -245,49 +257,24 @@ public class Word(Timeline entireTimeline, TimelineHandler timelineHandler, Canc
                     {
                         //sleep and leave the app open
                         _log.Trace($"Sleep after for {timelineEvent.DelayAfterActual}");
-                        Thread.Sleep(timelineEvent.DelayAfterActual.GetSafeSleepTime(writeSleep));
+                        if (Token.WaitHandle.WaitOne(timelineEvent.DelayAfterActual.GetSafeSleepTime(writeSleep))) Token.ThrowIfCancellationRequested();
                     }
 
-                    document.Dispose();
+                    //document.Dispose();
                     officeApplication.Quit();
-
-                    try
-                    {
-                        officeApplication.Dispose();
-                    }
-                    catch
-                    {
-                        // ignore
-                    }
-
-                    try
-                    {
-                        Marshal.ReleaseComObject(officeApplication);
-                    }
-                    catch
-                    {
-                        // ignore
-                    }
-
-                    try
-                    {
-                        Marshal.FinalReleaseComObject(officeApplication);
-                    }
-                    catch
-                    {
-                        // ignore
-                    }
 
                     GC.Collect();
                 }
-                catch (ThreadAbortException e)
-                {
-                    _log.Error(e);
-                    _log.Trace("Word closing abnormally...");
-                }
                 catch (Exception e)
                 {
-                    _log.Debug(e);
+                    if (e is ThreadAbortException || e is ThreadInterruptedException || e is OperationCanceledException)
+                    {
+                        _log.Error(e);
+                        _log.Trace("Word closing abnormally...");
+                        throw;
+                    }
+                    _log.Error(e);
+                _log.Trace("Word closing abnormally...");
                 }
                 finally
                 {
@@ -295,22 +282,21 @@ public class Word(Timeline entireTimeline, TimelineHandler timelineHandler, Canc
                     {
                         //sleep and leave the app open
                         _log.Trace($"Sleep after for {timelineEvent.DelayAfterActual} with jitter");
-                        // Thread.Sleep(timelineEvent.DelayAfterActual - writeSleep);
-                        Thread.Sleep(Jitter.JitterFactorDelay(timelineEvent.DelayAfterActual, jitterFactor));
+                        if (Token.WaitHandle.WaitOne(timelineEvent.DelayAfterActual.GetSafeSleepTime(Jitter.JitterFactorDelay(timelineEvent.DelayAfterActual, jitterFactor)))) Token.ThrowIfCancellationRequested();
                     }
                     else
                     {
-                        Thread.Sleep(5000);
+                        if (Token.WaitHandle.WaitOne(5000)) Token.ThrowIfCancellationRequested();
                     }
                 }
             }
         }
-        catch (ThreadAbortException e)
-        {
-            _log.Error(e);
-        }
         catch (Exception e)
         {
+            if (e is ThreadAbortException || e is ThreadInterruptedException || e is OperationCanceledException)
+            {
+                throw;
+            }
             _log.Error(e);
         }
         finally
