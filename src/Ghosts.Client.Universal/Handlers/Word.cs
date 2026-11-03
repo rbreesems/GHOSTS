@@ -209,7 +209,7 @@ public class Word(Timeline entireTimeline, TimelineHandler timelineHandler, Canc
                     if (string.IsNullOrEmpty(document.Path))
                     {
                         document.SaveAs(path);
-                        FileListing.Add(path, handler.HandlerType);
+                        //FileListing.Add(path, handler.HandlerType, Token);
                         _log.Trace($"{handler.HandlerType} saving new file: {path}");
                     }
                     else
@@ -247,7 +247,7 @@ public class Word(Timeline entireTimeline, TimelineHandler timelineHandler, Canc
                             Arg = "pdf",
                             Trackable = timelineEvent.TrackableId
                         });
-                        FileListing.Add(outputFileName.ToString(), handler.HandlerType);
+                        //FileListing.Add(outputFileName.ToString(), handler.HandlerType, Token);
                     }
 
                     if (_random.Next(100) < 50)

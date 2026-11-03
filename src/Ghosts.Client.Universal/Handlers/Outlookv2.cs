@@ -27,7 +27,7 @@ namespace Ghosts.Client.Universal.Handlers;
 public class Outlookv2(Timeline timeline, TimelineHandler handler, CancellationToken token)
     : BaseHandler(timeline, handler, token)
 {
-    private Application _app;
+    private Microsoft.Office.Interop.Outlook.Application _app;
     private NameSpace _oMapiNamespace;
     private RDOFolder _folderOutbox;
     private RDOFolder _folderInbox;
@@ -335,7 +335,7 @@ public class Outlookv2(Timeline timeline, TimelineHandler handler, CancellationT
 
     public void InitialDisplay()
     {
-        _app = new Application();
+        _app = new Microsoft.Office.Interop.Outlook.Application();
         _oMapiNamespace = _app.GetNamespace("MAPI");
         _folderInboxMapi = _oMapiNamespace.GetDefaultFolder(OlDefaultFolders.olFolderInbox);      
         _log.Trace("Launching Outlook");

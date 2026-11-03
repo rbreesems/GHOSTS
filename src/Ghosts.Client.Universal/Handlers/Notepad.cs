@@ -35,7 +35,7 @@ public class Notepad(Timeline entireTimeline, TimelineHandler timelineHandler, C
         {
             if (!OperatingSystem.IsWindows())
             {
-                _log.Info("Notepad handler automation is not currently supported on this OS");
+                _log.Info("Word handler automation is not currently supported on this OS");
                 return Task.CompletedTask;
             }
             ParseHandlerArgs();
@@ -129,7 +129,7 @@ public class Notepad(Timeline entireTimeline, TimelineHandler timelineHandler, C
             var filePath = Path.Combine(_outputDirectory, fileName);
             var text = GenerateRandomText();
             File.WriteAllText(filePath, text, Encoding.UTF8);
-            _log.Trace($"Notepad:: File {filePath} created.");
+            _log.Trace($"Notepad::  File {filePath} created.");
             return filePath;
         }
         catch (Exception e)
@@ -152,7 +152,7 @@ public class Notepad(Timeline entireTimeline, TimelineHandler timelineHandler, C
             if (filePath == null) return null;
             var additionalText = GenerateRandomText();
             File.AppendAllText(filePath, Environment.NewLine + additionalText, Encoding.UTF8);
-            _log.Trace($"Notepad:: File {filePath} modified.");
+            _log.Trace($"Notepad::  File {filePath} modified.");
             return filePath;
         }
         catch (Exception e)
@@ -174,7 +174,7 @@ public class Notepad(Timeline entireTimeline, TimelineHandler timelineHandler, C
             var filePath = GetRandomFile(_outputDirectory);
             if (filePath == null) return;
             File.Delete(filePath);
-            _log.Trace($"Notepad:: Deleted file {filePath}.");
+            _log.Trace($"Notepad::  File deleted {filePath}.");
         }
         catch (Exception e)
         {
@@ -194,7 +194,7 @@ public class Notepad(Timeline entireTimeline, TimelineHandler timelineHandler, C
             var filePath = GetRandomFile(_inputDirectory);
             if (filePath == null) return null;
             var content = File.ReadAllText(filePath, Encoding.UTF8);
-            _log.Trace($"Notepad:: Viewed file {filePath} ({content.Length} chars).");
+            _log.Trace($"Notepad::  File viewed {filePath} ({content.Length} chars).");
             return filePath;
         }
         catch (Exception e)

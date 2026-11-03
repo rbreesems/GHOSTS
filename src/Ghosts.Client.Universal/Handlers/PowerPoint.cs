@@ -198,7 +198,7 @@ public class PowerPoint(Timeline entireTimeline, TimelineHandler timelineHandler
                     if (string.IsNullOrEmpty(document.Path))
                     {
                         document.SaveAs(path);
-                        FileListing.Add(path, handler.HandlerType);
+                        //FileListing.Add(path, handler.HandlerType, Token);
                         _log.Trace($"{handler.HandlerType} saving new file: {path}");
                     }
                     else
@@ -233,7 +233,7 @@ public class PowerPoint(Timeline entireTimeline, TimelineHandler timelineHandler
                             Arg = "pdf",
                             Trackable = timelineEvent.TrackableId
                         });
-                        FileListing.Add(outputFileName, handler.HandlerType);
+                        //FileListing.Add(outputFileName, handler.HandlerType, Token);
                     }
 
                     if (_random.Next(100) < 50)

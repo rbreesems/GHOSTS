@@ -206,7 +206,7 @@ public class Excel(Timeline entireTimeline, TimelineHandler timelineHandler, Can
                     if (string.IsNullOrEmpty(document.Path))
                     {
                         document.SaveAs(path);
-                        FileListing.Add(path, handler.HandlerType);
+                        //FileListing.Add(path, handler.HandlerType, Token);
                         _log.Trace($"{handler.HandlerType} saving new file: {path}");
                     }
                     else
@@ -240,7 +240,7 @@ public class Excel(Timeline entireTimeline, TimelineHandler timelineHandler, Can
                             Arg = "pdf",
                             Trackable = timelineEvent.TrackableId
                         });
-                        FileListing.Add(pdfFileName, handler.HandlerType);
+                        //FileListing.Add(pdfFileName, handler.HandlerType, Token);
                     }
 
                     if (_random.Next(100) < 50)

@@ -14,6 +14,10 @@ using Newtonsoft.Json;
 
 namespace Ghosts.Client.Universal.Handlers;
 
+// Linux: WMI is done via Python impacket/wmiquery, which can be installed via Python
+// Windows: Does not use wmic.exe, which is obsolete. Uses Infrastructure/WmiSupport.cs which uses CimSession
+
+
 public class Wmi(Timeline entireTimeline, TimelineHandler timelineHandler, CancellationToken cancellationToken)
     : BaseHandler(entireTimeline, timelineHandler, cancellationToken)
 {
@@ -21,6 +25,8 @@ public class Wmi(Timeline entireTimeline, TimelineHandler timelineHandler, Cance
     private int _jitterFactor;
     private int _timeBetweenCommandsMax;
     private int _timeBetweenCommandsMin;
+
+    private WmiSupport _currentWmiSupport = null;
 
     protected override Task RunOnce()
     {
@@ -89,6 +95,11 @@ public class Wmi(Timeline entireTimeline, TimelineHandler timelineHandler, Cance
                 _log.Error("WMI:: No credentials supplied, either CredentialsFile or Credentials must be supplied in handler args, exiting.");
                 return Task.CompletedTask;
             }
+
+            if (OperatingSystem.IsWindows() && _currentWmiSupport == null) {
+                _currentWmiSupport = new WmiSupport();
+            }
+
 
             Ex();
         }
@@ -161,6 +172,29 @@ public class Wmi(Timeline entireTimeline, TimelineHandler timelineHandler, Cance
             _log.Error($"WMI:: Missing username or password for credential key '{credKey}', skipping.");
             return;
         }
+        if (OperatingSystem.IsWindows()) {
+             //have IP, user/pass, try connecting 
+                _currentWmiSupport.Init(hostIp, username, password, domain);
+                _currentWmiSupport.HostIp = hostIp; //for trace output
+                var client = _currentWmiSupport;
+                {
+                    try
+                    {
+                        client.Connect();
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;  //pass up
+                    }
+                    catch (Exception e)
+                    {
+                        _log.Error($"WMI:: Unable to connect WMI session to host '{hostIp}', skipping.");
+                        _log.Error(e);
+                        return;  //unable to connect
+                    }
+                    //we are connected, execute the commands
+                }
+        }
 
         foreach (var wmiCmd in wmiCmds)
         {
@@ -168,7 +202,8 @@ public class Wmi(Timeline entireTimeline, TimelineHandler timelineHandler, Cance
             try
             {
                 if (OperatingSystem.IsWindows()) {
-                    RunWmicCommand(hostIp, domain, username, password, wmiCmd.Trim());
+                    _currentWmiSupport.RunWmiCommand(wmiCmd.Trim());
+                    //RunWmicCommand(hostIp, domain, username, password, wmiCmd.Trim());
                 } else
                 {
                     RunWmiQueryCommand(hostIp, domain, username, password, wmiCmd.Trim());
