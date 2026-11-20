@@ -123,6 +123,8 @@ namespace Ghosts.Domain
         Print = 45,
         BrowserEdge = 46,
         Database = 47,
+        Mqtt = 48,
+        Irc = 49,
         Ssh = 100,
         Sftp = 101,
         Pidgin = 102,

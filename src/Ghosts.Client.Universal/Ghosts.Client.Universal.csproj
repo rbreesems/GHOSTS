@@ -35,23 +35,24 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.9.1"/>
-    <PackageReference Include="HtmlAgilityPack" Version="1.12.4"/>
-    <PackageReference Include="MySqlConnector" Version="2.5.0"/>
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2"/>
-    <PackageReference Include="NLog" Version="6.0.6"/>
-    <PackageReference Include="FileHelpers" Version="3.5.2"/>
-    <PackageReference Include="Selenium.Firefox.WebDriver" Version="0.27.0"/>
-    <PackageReference Include="Selenium.WebDriver" Version="4.33.0"/>
-    <PackageReference Include="Quartz" Version="3.13.1"/>
-    <PackageReference Include="SimpleTCP" Version="1.0.24"/>
-    <PackageReference Include="SSH.NET" Version="2025.0.0"/>
-    <PackageReference Include="MailKit" Version="4.16.0"/>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0"/>
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="MQTTnet" Version="5.2.0.1603" />
+    <PackageReference Include="MySqlConnector" Version="2.5.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
+    <PackageReference Include="NLog" Version="6.0.6" />
+    <PackageReference Include="FileHelpers" Version="3.5.2" />
+    <PackageReference Include="Selenium.Firefox.WebDriver" Version="0.27.0" />
+    <PackageReference Include="Selenium.WebDriver" Version="4.33.0" />
+    <PackageReference Include="Quartz" Version="3.13.1" />
+    <PackageReference Include="SimpleTCP" Version="1.0.24" />
+    <PackageReference Include="SSH.NET" Version="2025.0.0" />
+    <PackageReference Include="MailKit" Version="4.16.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0" />
     <PackageReference Include="Microsoft.Office.Interop.Outlook" Version="15.0.4797.1004">
       <EmbedInteropTypes>true</EmbedInteropTypes>   
     </PackageReference>
-    <PackageReference Include="Microsoft.Management.Infrastructure" Version="3.0.0"/> 
+    <PackageReference Include="Microsoft.Management.Infrastructure" Version="3.0.0" /> 
     <PackageReference Include="AutoItX.Dotnet.Latest">
       <Version>3.3.14.5</Version>
     </PackageReference>
@@ -73,7 +74,7 @@
 
 
   <ItemGroup>
-    <ProjectReference Include="..\Ghosts.Domain\Ghosts.Domain.csproj"/>
+    <ProjectReference Include="..\Ghosts.Domain\Ghosts.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
